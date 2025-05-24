@@ -1,0 +1,337 @@
+/*DATABASE COMMANDS*/
+
+CREATE DATABASE ENSF480_TP;
+USE ensf480_tp;
+
+/*TABLE CREATION*/
+
+CREATE TABLE Movie(
+Id INT PRIMARY KEY AUTO_INCREMENT,
+Name VARCHAR(100),
+Release_Year INT,
+Genre VARCHAR(50),
+Duration TIME,
+RU_Release_Date DATE,
+Rest_Release_Date DATE
+);
+
+CREATE TABLE Future_Movie(
+Id INT PRIMARY KEY AUTO_INCREMENT,
+Name VARCHAR(100),
+Release_Year INT,
+Genre VARCHAR(50),
+Duration TIME,
+RU_Release_Date DATE,
+Rest_Release_Date DATE
+);
+
+CREATE TABLE Theatre(
+Id INT PRIMARY KEY AUTO_INCREMENT,
+Name VARCHAR(100),
+Address VARCHAR(100)
+);
+
+CREATE TABLE Theatre_Movie(
+Theatre_ID INT,
+Movie_ID INT,
+Play_Date DATE,
+Play_Time TIME,
+FOREIGN KEY (Theatre_ID) REFERENCES Theatre(Id),
+FOREIGN KEY (Movie_ID) REFERENCES Movie(Id),
+PRIMARY KEY (Theatre_ID, Play_Date, Movie_ID)
+);
+
+CREATE TABLE Seat_Map(
+Id INT PRIMARY KEY AUTO_INCREMENT,
+Theatre_ID INT,
+Movie_Playing INT,
+Play_Date DATE,
+FOREIGN KEY (Theatre_ID, Play_Date, Movie_Playing) REFERENCES Theatre_Movie(Theatre_ID, Play_Date, Movie_ID)
+);
+
+CREATE TABLE Seat(
+Seat_Id INT PRIMARY KEY AUTO_INCREMENT,
+Map_Id INT,
+Row_Letter CHAR(1),
+Number INT,
+Taken_By VARCHAR(20),
+FOREIGN KEY (Map_Id) REFERENCES Seat_Map(Id),
+CONSTRAINT chk_row CHECK (Row_Letter IN ('A', 'B', 'C', 'D', 'E', 'F')),
+CONSTRAINT chk_number CHECK (Number BETWEEN 1 AND 5),
+CONSTRAINT taken CHECK (Taken_By IN ('Registered_User', 'Regular_User', 'Available'))
+);
+
+-- Create Registered_User table
+CREATE TABLE Registered_User (
+    Id INT PRIMARY KEY AUTO_INCREMENT,
+    Name VARCHAR(100) NOT NULL,
+    Address VARCHAR(100) NOT NULL,
+    Email VARCHAR(100),
+    Username VARCHAR(50) NOT NULL,
+    Password VARCHAR(50) NOT NULL,
+    Registration_date DATE NOT NULL,
+    Location VARCHAR(50),
+    CONSTRAINT loc_chk CHECK (Location IN (
+        'British Columbia', 'Alberta', 'Saskatchewan', 'Manitoba', 'New Brunswick', 
+        'Ontario', 'Newfoundland and Labrador', 'Prince Edward Island', 'Quebec', 'Yukon', 'Nunavut', 'Northwest Territories'
+    ))
+);
+
+CREATE TABLE Ticket(
+Id INT PRIMARY KEY AUTO_INCREMENT,
+Seat_ID INT NOT NULL,
+FOREIGN KEY (Seat_ID) REFERENCES Seat(Seat_Id)
+);
+
+CREATE TABLE RU_Ticket(
+Customer_Id INT,
+Ticket_Id INT,
+FOREIGN KEY (Customer_Id) REFERENCES Registered_User(Id),
+FOREIGN KEY (Ticket_Id) REFERENCES Ticket(Id),
+PRIMARY KEY (Customer_Id, Ticket_Id)
+);
+
+CREATE TABLE Card(
+Card_Id INT AUTO_INCREMENT,
+User_Id INT,
+Card_Type VARCHAR(20),
+Card_Number VARCHAR(25),
+CVV INT,
+Expiry_Date DATE,
+CONSTRAINT type_chk CHECK (Card_Type IN ('Credit', 'Debit')),
+CONSTRAINT cvv_len CHECK (CVV BETWEEN 100 AND 999),
+FOREIGN KEY (User_Id) REFERENCES Registered_User(Id),
+PRIMARY KEY (Card_Id, User_Id)
+);
+
+-- Create Non_Registered_User table
+CREATE TABLE Non_Registered_User (
+    Id INT PRIMARY KEY AUTO_INCREMENT,
+    Name VARCHAR(100) NOT NULL,
+    Email VARCHAR(100),
+    Location VARCHAR(50),
+    CONSTRAINT location_chk CHECK (Location IN (
+        'British Columbia', 'Alberta', 'Saskatchewan', 'Manitoba', 'New Brunswick', 
+        'Ontario', 'Newfoundland and Labrador', 'Prince Edward Island', 'Quebec', 'Yukon', 'Nunavut', 'Northwest Territories'
+    ))
+);
+
+CREATE TABLE Non_RU_Ticket(
+Customer_Id INT,
+Ticket_Id INT,
+FOREIGN KEY (Customer_Id) REFERENCES Non_Registered_User(Id),
+FOREIGN KEY (Ticket_Id) REFERENCES Ticket(Id),
+PRIMARY KEY (Customer_Id, Ticket_Id)
+);
+
+CREATE TABLE RU_Credit_Balance(
+User_ID INT PRIMARY KEY,
+Amount VARCHAR(10),
+FOREIGN KEY (User_ID) REFERENCES Registered_User(Id)
+);
+
+CREATE TABLE Non_RU_Credit_Balance(
+User_ID INT PRIMARY KEY,
+Amount VARCHAR(10),
+FOREIGN KEY (User_ID) REFERENCES Non_Registered_User(Id)
+);
+
+/*INSERTING VALUES*/
+
+INSERT INTO Movie (Name, Release_Year, Genre, Duration)
+VALUES
+('Pulp Fiction', 1994, 'Drama', '02:34:00'), ('Good Will Hunting', 1997, 'Drama', '02:06:00'), ('Fight Club', 1999, 'Drama', '02:19:00'),
+('Inception', 2010, 'Sci-Fi', '02:28:00'), ('The Matrix', 1999, 'Sci-Fi', '02:16:00'), ('Interstellar', 2014, 'Sci-Fi', '02:49:00'),
+('The Lion King', 1994, 'Animated', '01:28:00'), ('WALL-E', 2008, 'Animated', '01:38:00'), ('Toy Story', 1995, 'Animated', '01:21:00'),
+('Forrest Gump', 1994, 'Romance', '02:22:00'), ('La La Land', 2016, 'Romance', '02:08:00'), ('The Notebook', 2004, 'Romance', '02:01:00'),
+('The Hangover', 2009, 'Comedy', '01:40:00'), ('Superbad', 2007, 'Comedy', '01:53:00'), ('Monty Python and the Holy Grail', 1975, 'Comedy', '01:31:00'),
+('Elf', 2003, 'Christmas', '01:30:00'), ('Home Alone', 1990, 'Christmas', '01:43:00'), ('Christmas with the Kranks', 2004, 'Christmas', '01:38:00'),
+('Late Night with the Devil', 2023, 'Horror', '01:29:00'), ('The Exorcist', 1973, 'Horror', '02:02:00'), ('Halloween', 1978, 'Horror', '01:38:00');
+
+INSERT INTO Theatre (Name, Address) VALUES
+('AcmePlex Odeon', '123 Main Street, Springfield'),
+('AcmePlex Regal', '456 Elm Street, Shelbyville'),
+('AcmePlex AMC', '789 Oak Avenue, Capital City'),
+('AcmePlex Landmark', '101 Maple Lane, Smallville'),
+('AcmePlex Grand', '202 Pine Street, Riverdale');
+
+-- This is to insert into Theatre_Movie table:
+-- Set the date range for play dates
+SET @start_date = '2024-12-01';
+SET @end_date = '2024-12-07';
+
+-- Insert data into Theatre_Movie
+INSERT INTO Theatre_Movie (Theatre_ID, Movie_ID, Play_Date, Play_Time)
+SELECT 
+    t.Id AS Theatre_ID,
+    m.Id AS Movie_ID,
+    d.Play_Date,
+    TIME_FORMAT(SEC_TO_TIME(FLOOR(8 + (RAND() * 10)) * 3600), '%H:%i:%s') AS Play_Time -- Random time between 8 AM and 6 PM
+FROM 
+    Theatre t
+CROSS JOIN 
+    Movie m
+CROSS JOIN 
+    (SELECT DATE_ADD(@start_date, INTERVAL n DAY) AS Play_Date 
+     FROM (SELECT 0 AS n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL 
+                 SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6) dates) d
+WHERE 
+    d.Play_Date BETWEEN @start_date AND @end_date;
+
+-- This is to insert into Seat_Map:
+-- Define the date range for play dates
+SET @start_date = '2024-12-01';
+SET @end_date = '2024-12-07';
+
+-- Generate Seat_Map entries
+INSERT INTO Seat_Map (Theatre_ID, Movie_Playing, Play_Date)
+SELECT 
+    tm.Theatre_ID,
+    tm.Movie_ID,
+    tm.Play_Date
+FROM (
+    -- Generate combinations of Theatre_ID, Movie_ID, and Play_Date
+    SELECT 
+        t.Theatre_ID,
+        m.Movie_ID,
+        d.Play_Date
+    FROM 
+        (SELECT 1 AS Theatre_ID UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5) t
+    CROSS JOIN
+        (SELECT 1 AS Movie_ID UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL 
+         SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9 UNION ALL SELECT 10 UNION ALL 
+         SELECT 11 UNION ALL SELECT 12 UNION ALL SELECT 13 UNION ALL SELECT 14 UNION ALL SELECT 15 UNION ALL 
+         SELECT 16 UNION ALL SELECT 17 UNION ALL SELECT 18 UNION ALL SELECT 19 UNION ALL SELECT 20 UNION ALL SELECT 21) m
+    CROSS JOIN
+        (SELECT DATE_ADD(@start_date, INTERVAL n DAY) AS Play_Date 
+         FROM (SELECT 0 AS n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL 
+                     SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6) dates) d
+) tm
+WHERE tm.Play_Date BETWEEN @start_date AND @end_date;
+
+
+-- This is to insert into the Seat Table:
+-- Insert data into Seat table
+INSERT INTO Seat (Map_Id, Row_Letter, Number, Taken_By)
+SELECT 
+    sm.Id AS Map_Id,         -- Map_Id from Seat_Map table
+    rl.Row_Letter,           -- Row Letter (A-F)
+    sn.Number,               -- Seat Number (1-5)
+    'Available' AS Taken_By  -- Default all seats as "Available"
+FROM 
+    Seat_Map sm
+CROSS JOIN 
+    (SELECT 'A' AS Row_Letter UNION ALL
+     SELECT 'B' UNION ALL
+     SELECT 'C' UNION ALL
+     SELECT 'D' UNION ALL
+     SELECT 'E' UNION ALL
+     SELECT 'F') rl -- Generate rows A-F
+CROSS JOIN 
+    (SELECT 1 AS Number UNION ALL
+     SELECT 2 UNION ALL
+     SELECT 3 UNION ALL
+     SELECT 4 UNION ALL
+     SELECT 5) sn; -- Generate seat numbers 1-5
+
+
+INSERT INTO Registered_User (Name, Address, Email, Username, Password, Registration_date, Location) 
+VALUES
+('Alice Johnson', '123 Maple St, Springfield', 'alice.johnson@example.com', 'alicej', 'password123', '2022-01-15', 'Alberta'),
+('Bob Smith', '456 Oak Ave, Shelbyville', 'bob.smith@example.com', 'bobsmith', 'mypassword456', '2022-02-14', 'British Columbia'),
+('Catherine Brown', '789 Pine Rd, Riverdale', 'catherine.brown@example.com', 'catbrown', 'securepass789', '2023-04-04', 'Ontario'),
+('David Wilson', '101 Elm St, Smallville', 'david.wilson@example.com', 'davidw', 'david1234', '2023-07-01', 'Alberta'),
+('Emma Davis', '202 Birch Ln, Capital City', 'emma.davis@example.com', 'emmad', 'emmapass567', '2024-01-09', 'Manitoba');
+
+INSERT INTO Ticket (Seat_ID)
+SELECT Seat_Id
+FROM Seat;
+
+INSERT INTO RU_Ticket (Customer_Id, Ticket_Id) 
+VALUES
+(1, 1), -- Customer 1 owns Ticket 1
+(1, 2), -- Customer 1 owns Ticket 2
+(2, 3), -- Customer 2 owns Ticket 3
+(3, 4), -- Customer 3 owns Ticket 4
+(4, 5), -- Customer 4 owns Ticket 5
+(4, 6), -- Customer 4 owns Ticket 6
+(5, 7), -- Customer 5 owns Ticket 7
+(5, 8), -- Customer 5 owns Ticket 8
+(3, 9), -- Customer 3 owns Ticket 9
+(2, 10); -- Customer 2 owns Ticket 10
+
+INSERT INTO Card (User_Id, Card_Type, Card_Number, CVV, Expiry_Date)
+VALUES
+(1, 'Credit', '1234567812345678', 345, '2025-06-30'),
+(2, 'Debit',  '9876543298765432', 678, '2024-12-31'),
+(3, 'Credit', '1111222233334444', 234, '2026-03-15'),
+(4, 'Debit',  '4444333322221111', 567, '2025-08-20'),
+(5, 'Credit', '5555666677778888', 123, '2027-01-10');
+
+INSERT INTO Non_Registered_User (Name, Email, Location)
+VALUES
+('Alice Brown', 'alice.brown@example.com', 'British Columbia'),
+('Bob Smith', 'bob.smith@example.com', 'Ontario'),
+('Charlie Johnson', 'charlie.johnson@example.com', 'Manitoba'),
+('Daisy Adams', 'daisy.adams@example.com', 'Quebec'),
+('Eve Walker', 'eve.walker@example.com', 'Saskatchewan'),
+('Franklin White', 'franklin.white@example.com', 'Alberta'),
+('Grace Martin', 'grace.martin@example.com', 'New Brunswick'),
+('Henry Clark', 'henry.clark@example.com', 'Newfoundland and Labrador'),
+('Isla Turner', 'isla.turner@example.com', 'Alberta'),
+('Jack Wilson', 'jack.wilson@example.com', 'Ontario');
+
+
+/*TABLE DELETION*/
+
+DROP TABLE IF EXISTS Non_RU_Credit_Balance;
+DROP TABLE IF EXISTS Ru_Credit_Balance;
+DROP TABLE IF EXISTS Non_RU_Ticket;
+DROP TABLE IF EXISTS RU_Ticket;
+DROP TABLE IF EXISTS Ticket;
+DROP TABLE IF EXISTS Card;
+DROP TABLE IF EXISTS Seat;
+DROP TABLE IF EXISTS Seat_Map;
+DROP TABLE IF EXISTS Theatre_Movie;
+DROP TABLE IF EXISTS Theatre;
+DROP TABLE IF EXISTS Movie;
+DROP TABLE IF EXISTS Registered_User;
+DROP TABLE IF EXISTS Non_Registered_User;
+
+
+/*Queries for Button Functionalities*/
+
+-- For logging in:
+
+-- SELECT * FROM Registered_User WHERE Username='" + username + "' AND Password='" + password + "'"
+
+
+-- if logged in, tickets owned by that user must be created and shown on screen
+
+public List<Ticket> fetchTickets() { 
+        List<Tickets> Tickets = new ArrayList<>();
+        final String query = "SELECT * FROM Customer_Ticket WHERE Customer_Id = *OUR USED ONE TO SIGN IN*";
+
+        try (Statement stmt = dbConnect.createStatement(); ResultSet result = stmt.executeQuery(query)) {
+            while (result.next()) { // Loop over all the items found using the query
+                Ticket ticket = new Ticket( 
+                    result.getInt("Id"),
+                    result.getInt("Theatre_ID"),
+                    result.getInt("Movie_ID"),
+                    result.getInt("Seat_ID"),
+                    result.getDouble("Price")
+                );
+                Tickets.add(ticket);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return Tickets;
+    }
+-- logo goes home
+
+-- search for theatre, then movie, then showtime
+
+-- fill in info for payment unless registered user, then auto-fill
+
+-- Create new table which allows for regular users to have tickets

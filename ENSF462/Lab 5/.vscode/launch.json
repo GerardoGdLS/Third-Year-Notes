@@ -1,0 +1,78 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Router A",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "Router.py",
+            "console": "integratedTerminal",
+            "args": [
+                "0", "7000", "config-A.txt"
+            ]
+        },
+        {
+            "name": "Router B",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "Router.py",
+            "console": "integratedTerminal",
+            "args": [
+                "1", "7001", "config-B.txt"
+            ]
+        },
+        {
+            "name": "Router C",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "Router.py",
+            "console": "integratedTerminal",
+            "args": [
+                "2", "7002", "config-C.txt"
+            ]
+        },
+        {
+            "name": "Router D",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "Router.py",
+            "console": "integratedTerminal",
+            "args": [
+                "3", "7003", "config-D.txt"
+            ]
+        },
+        {
+            "name": "Router E",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "Router.py",
+            "console": "integratedTerminal",
+            "args": [
+                "4", "7004", "config-E.txt"
+            ]
+        },
+        {
+            "name": "Router F",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "Router.py",
+            "console": "integratedTerminal",
+            "args": [
+                "5", "7005", "config-F.txt"
+            ]
+        }
+    ],
+    "compounds": [
+    {
+      "name": "Run All Routers",
+      "configurations": [
+        "Router A",
+        "Router B",
+        "Router C",
+        "Router D",
+        "Router E",
+        "Router F"
+      ]
+    }
+]
+}

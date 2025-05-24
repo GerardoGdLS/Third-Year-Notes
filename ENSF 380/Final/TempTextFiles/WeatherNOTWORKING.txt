@@ -1,0 +1,100 @@
+package ca.ucalgary.edu.weather;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class Weather {
+    private String cityCode;
+
+    public static void main(String[] args) {
+        if (args.length != 1) {
+            System.out.println("Usage: java Weather <city_code>");
+            return;
+        }
+
+        String cityCode = args[0];
+        
+        System.out.println("Weather Report for " + cityCode + ": " + getWeatherReport(cityCode));
+    }
+    
+    Weather(String cityCode) {
+        this.cityCode = cityCode;
+    }
+    
+    public static String getWeatherReport(String cityCode) {
+        String urlString = "https://wttr.in/" + cityCode + "?0";
+        try {
+            String weatherData = fetchWeatherData(urlString);
+            return parseWeatherData(weatherData);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error fetching weather data.";
+        }
+    }
+
+    public static String fetchWeatherData(String urlString) throws Exception {
+        URL url = new URL(urlString);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+
+        BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        StringBuilder response = new StringBuilder();
+        String line;
+        while ((line = in.readLine()) != null) {
+            response.append(line);
+        }
+        in.close();
+        System.out.println(response.toString());
+        return response.toString();
+    }
+
+    public static String parseWeatherData(String data) {
+        // Updated regex patterns
+    	Pattern conditionPattern = Pattern.compile("</span></span>\\s*(.*?)\\s*(?:<|$)"); // Matches the pattern right after the double <span> tag
+
+    	Pattern tempPattern = Pattern.compile("</span></span> <span class=\"ef\\d+\">(\\d+(?:\\(\\d+\\))?)</span> °C"); // Matches the temp also after the double tag, dynamically changing the "ef" number values in case the colour changes
+
+    	Pattern windPattern = Pattern.compile("</span></span>\\s*<span class=\"bold\">([←↙↔↗↖↕])</span>\\s*<span class=\"ef\\d+\">(\\d+)(?:-(\\d+))?</span> km/h");
+
+        Pattern precipitationPattern = Pattern.compile("</span>\\s*(\\d+\\.\\d+)(?:\\s*\\((\\d+)%\\))? mm");
+
+        Matcher conditionMatcher = conditionPattern.matcher(data);
+        Matcher tempMatcher = tempPattern.matcher(data);
+        Matcher windMatcher = windPattern.matcher(data);
+        Matcher precipitationMatcher = precipitationPattern.matcher(data);
+
+        String temperature = "No temperature data found.";
+        String wind = "No wind data found.";
+        String condition = "No weather condition data found.";
+        String precipitation = "No precipitation data found.";
+
+        if (conditionMatcher.find()) {
+            condition = conditionMatcher.group(1).trim(); // Condition
+        }
+
+        if (tempMatcher.find()) {
+            temperature = tempMatcher.group(1) + " °C"; // Temperature
+        }
+
+        if (windMatcher.find()) {
+            String direction = windMatcher.group(1); // Wind direction
+            String speed = windMatcher.group(2); // Wind speed
+            String range = windMatcher.group(3); // Optional range
+            wind = direction + " " + speed + (range != null ? "-" + range : "") + " km/h";
+        }
+
+        if (precipitationMatcher.find()) {
+            String precipAmount = precipitationMatcher.group(1); // Precipitation amount
+            String precipPercentage = precipitationMatcher.group(2); // Optional percentage
+            precipitation = precipAmount + " mm" + (precipPercentage != null ? " | " + precipPercentage : "");
+        }
+
+        return "Weather Condition: " + condition + ", Temperature: " + temperature + ", Wind: " + wind + ", Precipitation: " + precipitation;
+    }
+
+
+}

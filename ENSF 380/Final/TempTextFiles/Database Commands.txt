@@ -1,0 +1,45 @@
+USE myDB;
+
+#Creates the table with relevant information about each ad, using the id as a PK
+CREATE TABLE Ads (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    txt TEXT,
+    media_path VARCHAR(500),
+    media_type ENUM('PDF', 'MPG', 'JPEG', 'BMP') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+#Creates the table that manages the timing of each add
+CREATE TABLE Ad_Schedule ( 
+    ad_id INT,
+    start_time TIME,
+    end_time TIME,
+    FOREIGN KEY (ad_id) REFERENCES Ads(id)
+);
+
+#By creating an index it allows us to query the ads faster
+CREATE INDEX idx_ad_schedule_time ON Ad_Schedule(start_time, end_time);
+
+#Check that the start time is not less than the end time
+ALTER TABLE Ad_Schedule ADD CONSTRAINT chk_time CHECK (start_time < end_time);
+
+#This gives us the current ad
+SELECT a.*
+FROM Ads a
+JOIN Ad_Schedule s ON a.id = s.ad_id
+WHERE CURTIME() BETWEEN s.start_time AND s.end_time;
+
+INSERT INTO Ads (txt, media_path, media_type) VALUES 
+('Coca Cola', 'C:\\Users\\gerar\\OneDrive\\Documents\\ENSF 380\\Final\\AdJPEGs\\CocaColaAd', 'JPEG'), #CocaCola ad
+('Subway', 'C:\\Users\\gerar\\OneDrive\\Documents\\ENSF 380\\Final\\AdJPEGs\\SubwayAd', 'JPEG'), #Subway ad
+('McDonald\'s', 'C:\\Users\\gerar\\OneDrive\\Documents\\ENSF 380\\Final\\AdJPEGs\\McDonaldsAd', 'JPEG'), #McDonalds ad
+('LittleCaesars', 'C:\\Users\\gerar\\OneDrive\\Documents\\ENSF 380\\Final\\AdJPEGs\\LittleCaesarsAd', 'JPEG'); #Little Caesars ad
+
+INSERT INTO Ad_Schedule (ad_id, start_time, end_time) VALUES 
+(1, '00:00:00', '23:59:59'),
+(2, '00:00:00', '23:59:59'),
+(3, '00:00:00', '23:59:59'),
+(4, '00:00:00', '23:59:59');
+
+SELECT * FROM ads;
+SELECT * FROM ad_schedule;

@@ -1,0 +1,1 @@
+ -c -mcpu=$(MP_PROCESSOR_OPTION)        -g -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -O0 -msmart-io=1 -Wall -msfr-warn=off   C:\Users\gerar\OneDrive\Documents\ENSF 460\App 2 DOWNLOADED\ApplicationProject2_Group#10\App_Project_2.X\pwm.c
